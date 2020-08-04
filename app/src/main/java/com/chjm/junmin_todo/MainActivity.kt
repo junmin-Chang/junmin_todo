@@ -1,5 +1,7 @@
 package com.chjm.junmin_todo
 
+import android.graphics.Paint
+import android.graphics.Typeface
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -27,15 +29,30 @@ class MainActivity : AppCompatActivity() {
         setContentView(view)
 
 
-        data.add(Todo("숙제"))
+        data.add(Todo("숙제", true))
         data.add(Todo("청소"))
 
-        binding.recyclerView.layoutManager = LinearLayoutManager(this)
-        binding.recyclerView.adapter = TodoAdapter(data)
+
+        binding.recyclerView.apply {
+            layoutManager = LinearLayoutManager(this@MainActivity)
+            adapter = TodoAdapter(data,
+                onClickDeleteIcon = {
+                    deleteTodo(it)
+                },
+                onClickItem = {
+                    toggleTodo(it)
+                }
+            )
+        }
 
         binding.addButton.setOnClickListener {
             addTodo()
         }
+    }
+
+    private fun toggleTodo(todo: Todo) {
+        todo.isDone = !todo.isDone
+        binding.recyclerView.adapter?.notifyDataSetChanged()
     }
 
     private fun addTodo() {
@@ -43,21 +60,34 @@ class MainActivity : AppCompatActivity() {
         data.add(todo)
         binding.recyclerView.adapter?.notifyDataSetChanged()
     }
+
+    private fun deleteTodo(todo: Todo) {
+        data.remove(todo)
+        binding.recyclerView.adapter?.notifyDataSetChanged()
+    }
 }
 
 
-data class Todo(val text: String, var isDone: Boolean = false)
+data class Todo(
+    val text: String, var isDone: Boolean = false
+)
 
 
-class TodoAdapter(private val myDataset: List<Todo>) :
+class TodoAdapter(
+    private val myDataset: List<Todo>,
+    val onClickDeleteIcon: (todo: Todo) -> Unit,
+    val onClickItem: (todo: Todo) -> Unit
+) :
     RecyclerView.Adapter<TodoAdapter.TodoViewHolder>() {
 
 
     class TodoViewHolder(val binding: ItemTodoBinding) : RecyclerView.ViewHolder(binding.root)
 
 
-    override fun onCreateViewHolder(parent: ViewGroup,
-                                    viewType: Int): TodoAdapter.TodoViewHolder {
+    override fun onCreateViewHolder(
+        parent: ViewGroup,
+        viewType: Int
+    ): TodoAdapter.TodoViewHolder {
 
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_todo, parent, false)
@@ -69,7 +99,37 @@ class TodoAdapter(private val myDataset: List<Todo>) :
 
     override fun onBindViewHolder(holder: TodoViewHolder, position: Int) {
 
-        holder.binding.todoText.text = myDataset[position].text
+        val todo = myDataset[position]
+        holder.binding.todoText.text = todo.text
+
+
+        if (todo.isDone) {
+
+
+            holder.binding.todoText.apply {
+                paintFlags = paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
+                setTypeface(null, Typeface.ITALIC)
+            }
+
+        } else {
+
+            holder.binding.todoText.apply {
+                paintFlags = 0
+                setTypeface(null, Typeface.NORMAL)
+            }
+
+        }
+
+        holder.binding.deleteImageView.setOnClickListener {
+
+            onClickDeleteIcon.invoke(todo)
+
+        }
+
+        holder.binding.root.setOnClickListener {
+            onClickItem.invoke(todo)
+        }
+
     }
 
 
