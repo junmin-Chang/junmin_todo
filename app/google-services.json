@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "138224564069",
+    "firebase_url": "https://junmintodo.firebaseio.com",
+    "project_id": "junmintodo",
+    "storage_bucket": "junmintodo.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:138224564069:android:304bbc39583d47cd9fd38c",
+        "android_client_info": {
+          "package_name": "com.chjm.junmin_todo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "138224564069-vur3pi32b4k388b8cv7evqa4rc3nk080.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAiBXoRck4CgKQBV2hBdRX384YSSdhTOnk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "138224564069-vur3pi32b4k388b8cv7evqa4rc3nk080.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
