@@ -249,20 +249,33 @@ class MainViewModel : ViewModel() {
 
     fun fetchData() {
 
-        db.collection("todos")
-            .get()
-            .addOnSuccessListener { result ->
-                data.clear()
-                for (document in result) {
-                    val todo = Todo(document.data["text"] as String,
-                        document.data["isDone"] as Boolean)
+        val user = FirebaseAuth.getInstance().currentUser
+        if (user != null) {
 
-                    data.add(todo)
+
+            db.collection(user.uid)
+                .addSnapshotListener {
+                        value, e ->
+                    if (e != null) {
+                        return@addSnapshotListener
+                    }
+
+                    data.clear()
+                    for (document in value!!) {
+                        val todo = Todo(
+                            document.getString("text") ?: "",
+                            document.getBoolean("isDone") ?: false
+                        )
+
+                        data.add(todo)
+                    }
+
+
+                    todoLiveData.value = data
                 }
 
 
-                todoLiveData.value = data
-            }
+        }
     }
 
 
