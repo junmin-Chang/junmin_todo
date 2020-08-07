@@ -21,6 +21,8 @@ import com.chjm.junmin_todo.databinding.ItemTodoBinding
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.IdpResponse
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.QueryDocumentSnapshot
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
@@ -162,9 +164,9 @@ data class Todo(
 
 
 class TodoAdapter(
-    private var myDataset: List<Todo>,
-    val onClickDeleteIcon: (todo: Todo) -> Unit,
-    val onClickItem: (todo: Todo) -> Unit
+    private var myDataset: List<DocumentSnapshot>,
+    val onClickDeleteIcon: (todo: DocumentSnapshot) -> Unit,
+    val onClickItem: (todo: DocumentSnapshot) -> Unit
 ) :
     RecyclerView.Adapter<TodoAdapter.TodoViewHolder>() {
 
@@ -188,10 +190,10 @@ class TodoAdapter(
     override fun onBindViewHolder(holder: TodoViewHolder, position: Int) {
 
         val todo = myDataset[position]
-        holder.binding.todoText.text = todo.text
+        holder.binding.todoText.text = todo.getString("text") ?: ""
 
 
-        if (todo.isDone) {
+        if ((todo.getBoolean("isDone") ?: false) == true) {
 
 
             holder.binding.todoText.apply {
@@ -223,7 +225,7 @@ class TodoAdapter(
 
     override fun getItemCount() = myDataset.size
 
-    fun setData(newData: List<Todo>) {
+    fun setData(newData: List<DocumentSnapshot>) {
         myDataset = newData
         notifyDataSetChanged()
     }
@@ -234,9 +236,8 @@ class MainViewModel : ViewModel() {
 
     val db = Firebase.firestore
 
-    val todoLiveData = MutableLiveData<List<Todo>>()
+    val todoLiveData = MutableLiveData<List<DocumentSnapshot>>()
 
-    private val data = arrayListOf<Todo>()
 
 
     init {
@@ -260,18 +261,11 @@ class MainViewModel : ViewModel() {
                         return@addSnapshotListener
                     }
 
-                    data.clear()
-                    for (document in value!!) {
-                        val todo = Todo(
-                            document.getString("text") ?: "",
-                            document.getBoolean("isDone") ?: false
-                        )
-
-                        data.add(todo)
+                    if (value != null) {
+                        todoLiveData.value = value.documents
                     }
 
 
-                    todoLiveData.value = data
                 }
 
 
@@ -279,20 +273,32 @@ class MainViewModel : ViewModel() {
     }
 
 
-    fun toggleTodo(todo: Todo) {
-        todo.isDone = !todo.isDone
-        todoLiveData.value = data
+    fun toggleTodo(todo: DocumentSnapshot) {
+//        todo.isDone = !todo.isDone
+//        todoLiveData.value = data
+
+
+        FirebaseAuth.getInstance().currentUser?.let {user ->
+            val isDone = todo.getBoolean("isDone") ?: false
+            db.collection(user.uid).document(todo.id).update("isDone", !isDone)
+        }
 
     }
 
     fun addTodo(todo: Todo) {
-        data.add(todo)
-        todoLiveData.value = data
+        FirebaseAuth.getInstance().currentUser?.let {user ->
+            db.collection(user.uid).add(todo)
+        }
+
+
     }
 
-    fun deleteTodo(todo: Todo) {
-        data.remove(todo)
-        todoLiveData.value = data
+    fun deleteTodo(todo: DocumentSnapshot) {
+
+
+        FirebaseAuth.getInstance().currentUser?.let {user ->
+            db.collection(user.uid).document(todo.id).delete()
+        }
 
     }
 
